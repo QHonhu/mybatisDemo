@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>   
+<!DOCTYPE mapper   
+PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"  
+"http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd"> 
+
+<mapper namespace="com.dy.dao.StudentDao">
+
+	<!-- 这儿定义一个resultMap -->
+	<resultMap type="student" id="studentMap">
+	
+		<!-- 
+			数据库中主键是id, 但是我这儿却是指定idCard为主键，为什么？ 
+			刚刚讲了，id用来表示唯一性， 我们可以认为只要idCard一样，那么他就是同一个学生。
+			如果此处用数据库中id， 那么mybatis将会认为数据库中每条记录都是一个student, 这显然不符合逻辑
+		-->
+		<id property="idCard" column="stu_id_card"/>
+		<result property="id" column="stu_id"/>
+		<result property="name" column="stu_name"/>
+		<result property="deleteFlag" column="stu_delete_flg"/>
+		
+		<!-- 
+			这儿就是实现一对多的关键。 
+			在Student中，courseList为List<Course>, 因此，ofType也应该与之对应（当然，我用了别名，不然要蛋疼的写全名了）。
+			collection的子标签是在指定Course的映射关系（由于Course的javabean的属性名与数据库的列名不一致）
+		-->
+		<collection property="courseList" column="stu_course_id" ofType="Course">
+			<id property="id" column="course_id"/>
+			<result property="name" column="course_name"/>
+			<result property="deleteFlag" column="course_delete_flg"/>
+		</collection>
+	</resultMap>
+	
+	<!-- 这儿将返回类型设置成了上面指定的studentMap -->
+	<select id="findStudentById" resultMap="studentMap">
+		SELECT s.*, c.* FROM t_student s LEFT JOIN t_course c ON s.stu_course_id=c.course_id WHERE s.stu_id_card=#{idCard}
+	</select>
+	
+</mapper>
